@@ -14,4 +14,4 @@ RUN apt-get update && apt-get install -y python3 python3-pip && pip3 install fla
 EXPOSE 5000
 
 # Running the server
-CMD ["python3", "server.py"]
+ENTRYPOINT python3 server.py

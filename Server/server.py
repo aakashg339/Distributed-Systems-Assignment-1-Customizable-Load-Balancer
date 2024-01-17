@@ -1,6 +1,7 @@
 # Implementation of the server
 
-from flask import Flask  
+from flask import Flask
+import os
 
 #creating the Flask class object
 app = Flask(__name__)
@@ -8,8 +9,8 @@ app = Flask(__name__)
 # Server endpoint for requests at http://localhost:5000/home, methond=GET
 @app.route('/home', methods = ['GET'])
 def home():
-    # Server ID (will me modified later to be used from environment variables)
-    serverID = 23
+    # Server ID taking from the environment variable named SERVER_ID
+    serverID = os.environ.get('SERVER_ID')
 
     # Dictionary to return as a JSON object
     serverHomeMessage =  {"message": "Hello from Server: [" + str(serverID) + "]",
@@ -37,4 +38,4 @@ def invalidUrlHandler(path):
     return errorMessage, 404
     
 if __name__ =='__main__':
-    app.run(port=5000, debug = True)
+    app.run(host="0.0.0.0", port=5000, debug = True)
