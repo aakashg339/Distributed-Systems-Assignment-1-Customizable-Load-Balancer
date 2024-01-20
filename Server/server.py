@@ -38,4 +38,5 @@ def invalidUrlHandler(path):
     return errorMessage, 404
     
 if __name__ =='__main__':
-    app.run(host="0.0.0.0", port=5000, debug = True)
+    host_id = "127.0.0." + str(os.environ.get('SERVER_ID'))
+    app.run(host= host_id, port=5000, debug = True)

@@ -8,10 +8,10 @@ WORKDIR /dockerServer
 COPY . /dockerServer
 
 # Installing python3, pip3 and other dependencies(flask)
-RUN apt-get update && apt-get install -y python3 python3-pip && pip3 install flask && pip3 install requests && apt-get install -y docker.io 
+RUN apt-get update && apt-get install -y python3 python3-pip && pip3 install flask
 
 # Exposing port 5000
 EXPOSE 5000
 
 # Running the server
-ENTRYPOINT python3 load_balancer.py
+ENTRYPOINT python3 server.py
