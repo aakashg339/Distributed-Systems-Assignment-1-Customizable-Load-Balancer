@@ -7,6 +7,7 @@ class ConsistentHashmapImpl:
         self.slotsInHashMap = slotsInHashMap
         self.hashmap = {}
         self.sorted_keys = []
+        occupied_slots = [-1]*slotsInHashMap
     
     def calculateVirtualServerHashValue(self, serverId, virtualServerNumber):
         hashingValueOfVirtualServer = (pow(serverId, 2) + pow(virtualServerNumber, 2) + (2 * virtualServerNumber) + 25) % self.slotsInHashMap
@@ -19,6 +20,7 @@ class ConsistentHashmapImpl:
     # adding virtual server to hashmap. If there is colosion, then resolve using linear probing.
     def addServer(self, serverId):
         print("### Server : " + str(serverId))
+        listOfOccupiedSlots = []
         for virtualServerNumber in range(1, self.virtualServers+1):
             virtualServerHashValue = self.calculateVirtualServerHashValue(serverId, virtualServerNumber)
             if virtualServerHashValue in self.hashmap:
@@ -38,12 +40,17 @@ class ConsistentHashmapImpl:
                 self.hashmap[virtualServerHashValue] = {'server': serverId}
             else:
                 self.hashmap[virtualServerHashValue]['server'] = serverId
+
+            self.occupied_slots[virtualServerHashValue] = serverId
             self.sorted_keys.append(virtualServerHashValue)
         self.sorted_keys.sort()
         return True
 
     # removing virtual server from hashmap. 
     def removeServer(self, serverId):
+        for i in range(1, self.virtualServers+1): 
+            if self.occupied_slots[i] == serverId : 
+                self.occupied_slots[i] = -1
         for virtualServerNumber in range(1, self.virtualServers+1):
             virtualServerHashValue = self.calculateVirtualServerHashValue(serverId, virtualServerNumber)
             numberOfCellsChecked = 0
