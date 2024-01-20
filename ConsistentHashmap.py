@@ -7,18 +7,21 @@ class ConsistentHashmapImpl:
         self.slotsInHashMap = slotsInHashMap
         self.hashmap = {}
         self.sorted_keys = []
-        occupied_slots = [-1]*slotsInHashMap
+        self.occupied_slots = [-1]*slotsInHashMap
     
     def calculateVirtualServerHashValue(self, serverId, virtualServerNumber):
-        hashingValueOfVirtualServer = (pow(serverId, 2) + pow(virtualServerNumber, 2) + (2 * virtualServerNumber) + 25) % self.slotsInHashMap
+        hashingValueOfVirtualServer = ((serverId ** 2) + (virtualServerNumber ** 2) + (2 * virtualServerNumber) + 25) % self.slotsInHashMap
         return hashingValueOfVirtualServer
     
     def calculateRequestHashValue(self, requestId):
         hashingValueOfRequest = (pow(requestId, 2) + (2*requestId) + 17) % self.slotsInHashMap
         return hashingValueOfRequest
     
+    def getServers(self): 
+        return self.servers
+
     # adding virtual server to hashmap. If there is colosion, then resolve using linear probing.
-    def addServer(self, serverId):
+    def addServer(self, serverId, serverName):
         print("### Server : " + str(serverId))
         listOfOccupiedSlots = []
         for virtualServerNumber in range(1, self.virtualServers+1):
@@ -44,29 +47,31 @@ class ConsistentHashmapImpl:
             self.occupied_slots[virtualServerHashValue] = serverId
             self.sorted_keys.append(virtualServerHashValue)
         self.sorted_keys.sort()
+        self.servers.append(serverName)
         return True
 
     # removing virtual server from hashmap. 
-    def removeServer(self, serverId):
+    def removeServer(self, serverId, serverName):
         for i in range(1, self.virtualServers+1): 
             if self.occupied_slots[i] == serverId : 
                 self.occupied_slots[i] = -1
-        for virtualServerNumber in range(1, self.virtualServers+1):
-            virtualServerHashValue = self.calculateVirtualServerHashValue(serverId, virtualServerNumber)
-            numberOfCellsChecked = 0
+        self.servers.remove(serverName)
+        # for virtualServerNumber in range(1, self.virtualServers+1):
+        #     virtualServerHashValue = self.calculateVirtualServerHashValue(serverId, virtualServerNumber)
+        #     numberOfCellsChecked = 0
 
-            # As linear probing was used to resolve colosion, we need to check all the slots to remove the server.
-            while virtualServerHashValue in self.hashmap and numberOfCellsChecked < self.slotsInHashMap:
-                if self.hashmap[virtualServerHashValue]['server'] == serverId:
-                    self.hashmap[virtualServerHashValue].pop('server')
-                    # If there is no other entry for the key, then remove the key from hashmap.
-                    if len(self.hashmap[virtualServerHashValue]) == 0:
-                        self.hashmap.pop(virtualServerHashValue)
-                    self.sorted_keys.remove(virtualServerHashValue)
-                    break
-                virtualServerHashValue += 1
-                virtualServerHashValue %= self.slotsInHashMap
-                numberOfCellsChecked += 1
+        #     # As linear probing was used to resolve colosion, we need to check all the slots to remove the server.
+        #     while virtualServerHashValue in self.hashmap and numberOfCellsChecked < self.slotsInHashMap:
+        #         if self.hashmap[virtualServerHashValue]['server'] == serverId:
+        #             self.hashmap[virtualServerHashValue].pop('server')
+        #             # If there is no other entry for the key, then remove the key from hashmap.
+        #             if len(self.hashmap[virtualServerHashValue]) == 0:
+        #                 self.hashmap.pop(virtualServerHashValue)
+        #             self.sorted_keys.remove(virtualServerHashValue)
+        #             break
+        #         virtualServerHashValue += 1
+        #         virtualServerHashValue %= self.slotsInHashMap
+        #         numberOfCellsChecked += 1
 
     # adding request to hashmap. If there is colosion, then resolve using linear probing.
     def addRequest(self, requestId):
@@ -91,6 +96,29 @@ class ConsistentHashmapImpl:
         self.sorted_keys.append(requestHashValue)
         self.sorted_keys.sort()
         return True
+    
+    def getContainerID(self, requestId): 
+        requestHashValue = self.calculateRequestHashValue(requestId)
+        if requestHashValue in self.hashmap:
+            numberOfCellsChecked = 0
+
+            # Checking if the hashed cell is already having a request. If yes, then resolve using linear probing. Also checking till all the slots are checked.
+            while requestHashValue in self.hashmap and 'request' in self.hashmap[requestHashValue] and numberOfCellsChecked < self.slotsInHashMap:
+                requestHashValue += 1
+                requestHashValue %= self.slotsInHashMap
+                numberOfCellsChecked += 1
+            
+            # If all the slots are checked and still not found a empty slot, then return.
+            if numberOfCellsChecked == self.slotsInHashMap:
+                return False
+        
+        if requestHashValue not in self.hashmap:
+            self.hashmap[requestHashValue] = {'request': requestId}
+        else:
+            self.hashmap[requestHashValue]['request'] = requestId
+        self.sorted_keys.append(requestHashValue)
+        self.sorted_keys.sort()
+        return self.occupied_slots[requestHashValue]
     
     # removing request from hashmap.
     def removeRequest(self, requestId):

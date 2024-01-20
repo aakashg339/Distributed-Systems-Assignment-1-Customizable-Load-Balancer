@@ -20,3 +20,7 @@ then opem the address : http://127.0.0.1:5000/home
 this should result in different servers getting called. 
 
 Day Successfully wasted :) :) 
+
+
+NOTE :: 
+docker-compose has not yet set been set up 
