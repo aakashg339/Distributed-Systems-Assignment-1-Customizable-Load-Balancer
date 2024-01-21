@@ -37,5 +37,5 @@ def invalidUrlHandler(path):
     # Returning the JSON object along with the status code 404
     return errorMessage, 404
     
-if __name__ =='__main__':
-    app.run(host="0.0.0.0", port=5000, debug = True)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000)

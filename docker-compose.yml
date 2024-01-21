@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  servicename:
+    build: ./
+    image: testimage
+    container_name: testcontainer
+    ports:
+      - "5000:5000"
+    volumes:
+      - //./pipe/docker_engine/:/var/run/docker.sock
+    privileged: true
+    networks:
+      net1:
+        aliases:
+          - testcontainer
+    environment:
+      SERVER_ID: 0
+networks:
+  net1:
