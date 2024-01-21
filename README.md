@@ -24,3 +24,26 @@ Day Successfully wasted :) :)
 
 NOTE :: 
 docker-compose has not yet set been set up 
+
+
+
+Jan 21 19:27 PM 
+
+Load Balancer now in working condition. 
+
+Added the things below 
+- Added the health check for the servers that makes sure that a minimum of N(3 initially) servers are running every time 
+- Make adjustments to handle concurrent requests and deletion/maintainance of servers
+- Handled some edge cases for all the /add, /rem and /<path> methods 
+
+
+How to use ? 
+Go inside Server folder 
+then RUN : 
+1. docker build -t serverimage .
+2. cd .. 
+<!-- 3. docker rm -f  $(docker ps -aq) (Repeat this in between the next call) --> // Not needed now, I have called this from within the load-balancer. 
+3. python3 load_balancer.py
+
+then opem the address : http://127.0.0.1:5000/home 
+this should result in different servers getting called. 
