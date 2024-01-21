@@ -17,7 +17,6 @@ def hash_function(value):
 
 
 
-def createServer(id):
-    container_name = f'server{id}'  # Adjust the naming convention as needed
+def createServer(id, container_name):
     os.popen(f"docker stop {container_name}")
     return os.popen(f'docker run --name {container_name} --network my_network -e SERVER_ID={id} -d serverimage').read()

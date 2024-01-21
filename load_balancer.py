@@ -4,12 +4,14 @@ import logging
 import random
 import requests
 import json
+import threading
+import time
 import helper
 from ConsistentHashmap import ConsistentHashmapImpl
 
 app = Flask(__name__)
 
-replicas = ["Server 1", "Server 2", "Server 3"]
+replicas = []
 # os.popen(f"docker build -t serverimage ./Server")
 
 N = 3
@@ -35,6 +37,47 @@ def getServerID():
 
 def removeServer(i):
     server_ids[i] = 0
+
+
+def check_server_health(server_url):
+    try:
+        response = requests.get(f"{server_url}/heartbeat", timeout=2)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+
+def health_check():
+    global servers, currentNumberofServers
+    while True:
+        time.sleep(10)
+        for server_name, server_url in servers.items():
+            if not check_server_health(server_url[1]):
+                id = servers[server_name][0]
+                logging.debug(f"Server : {server_name} is down. Removing from the pool.")
+                os.system(f'docker stop server{server_name} && docker rm {server_name}')
+                del servers[server_name]
+                del server_hash[id]
+                removeServer(id)
+                consistentHashMap.removeServer(id, server_name)
+                currentNumberofServers-=1
+
+        # Check if the number of running servers is less than 3
+        while currentNumberofServers < 3:
+            x = getServerID()
+            name = f"server{x}"
+            logging.debug(f"Creating new Server :{name}")
+            helper.createServer(x, name)
+            consistentHashMap.addServer(x, name)
+            servers[name] = [x, f"http://{get_container_ip(name)}:5000/"]
+            server_hash[x] = name
+            currentNumberofServers+=1
+
+
+def start_health_check_thread():
+    health_check_thread = threading.Thread(target=health_check)
+    health_check_thread.daemon = True
+    health_check_thread.start()
+
 
 # This will return the status of the servers maintained by the load balancer
 @app.route('/rep', methods=['GET'])
@@ -69,20 +112,33 @@ def add_replicas():
         }
         return jsonify(response_json), 400
     
-    # TODO : Will add set based check, if 2 server names are same 
-
-
+    # Set based check, if 2 server names are same
+    duplicates = False
+    for name in hostnames :
+        if name in list(servers.keys()):
+            duplicates = True
+            break
+    if len(set(hostnames))<n:
+        duplicates = True
+    if duplicates == True:
+        return {
+            "message": {
+                "<Error> duplicate hostnames"
+            },
+            "status": "failure"
+        }, 400
+        
 
     # Update replicas based on consistent hashing logic
-    # TODO : Will Complete this after @Soham Completes the Hash-Map Function 
+
     global currentNumberofServers
     for id in hostnames:
         x = getServerID()
-        helper.createServer(x)
-        servers[x] = f"http://server{x}:5000/"
-        serverName.append(id)
-        consistentHashMap.addServer(x)
-        server_hash[id] = [id, str(x)]
+        name = id
+        helper.createServer(x, name)
+        consistentHashMap.addServer(x, name)
+        servers[name] = [x, f"http://{get_container_ip(name)}:5000/"]
+        server_hash[x] = name
         currentNumberofServers+=1
 
     replicas = consistentHashMap.getServers() 
@@ -103,7 +159,9 @@ def remove_server():
     payload = request.get_json()
     n = payload.get('n')
     hostnames = payload.get('hostnames', [])
-
+    print("****************************************************")
+    print(hostnames)
+    print(replicas)
     # Sanity Checks ---------------------------------------------------------------------
     if len(hostnames)>n: 
         response_json = {
@@ -137,22 +195,23 @@ def remove_server():
     
     # handling remove servers 
     global currentNumberofServers
-    for id in hostnames :
-        print("^^^^^" + id)
-        os.system(f'docker stop server{server_hash[id][1]} && docker rm server{server_hash[id][1]}')
-        consistentHashMap.removeServer(int(server_hash[id][1]),(server_hash[id][0]) )
-        del servers[int(server_hash[id][1])]
-        del server_hash[id]
+    for name in hostnames :
+        os.system(f'docker stop server{name} && docker rm server{name}')
+        consistentHashMap.removeServer(servers[name][0], name)
+        del server_hash[servers[name][0]]
+        removeServer(servers[name][0])
+        del servers[name]
         currentNumberofServers-=1
         n-=1
     
     # If any the spcified hostnames are less the number of containers to be actually removed 
     while n!=0 :
-        id = consistentHashMap.getRandomServerId()
-        os.system(f'docker stop server{server_hash[id]} && docker rm {server_hash[id]}')
-        consistentHashMap.removeServer(id)
-        del servers[int(server_hash[id][1])]
-        del server_hash[id]
+        name = server_hash[consistentHashMap.getRandomServerId()]
+        os.system(f'docker stop server{name} && docker rm server{name}')
+        consistentHashMap.removeServer(servers[name][0], name)
+        del server_hash[servers[name][0]]
+        removeServer(servers[name][0])
+        del servers[name]
         currentNumberofServers-=1
         n-=1
 
@@ -172,16 +231,14 @@ def get_container_ip(container_name):
 
 @app.route('/<path>', methods=['GET'])
 def route_to_replica(path):
-    available_servers = list(servers.keys())
-    counter = available_servers[(random.randint(0,currentNumberofServers-1))]
-    container_name = f'server{counter}'
+    global counter 
+    counter = (counter+1)%max_request
     container_id = consistentHashMap.getContainerID(counter)
-    # Get the IP address of the container
+    print(f"$$$$$$$$$$$$$$$$$$ {container_id}")
+    container_name = server_hash[container_id]
     container_ip = get_container_ip(container_name)
-    server_url = f"http://{container_ip}:5000/{path}"
-    
+    server_url = servers[container_name][1]+str(path)
     logging.debug(f"Attempting to access container: {container_name} with IP: {container_ip}")
-    
     try:
         response = requests.get(server_url)
         logging.debug(f"Response from container: {response.text}")
@@ -192,20 +249,21 @@ def route_to_replica(path):
 
 if __name__ =='__main__':
     logging.info("***********************************")
+    logging.debug(os.popen("docker rm -f  $(docker ps -aq)").read())
     try:
         logging.info(os.popen(f"docker network create my_network").read())
     except:
         logging.info("Network my_network already exists.")
     for i in range(1, 4):
         x = getServerID()
-        helper.createServer(x) 
-        consistentHashMap.addServer(x, f"server{x}")
-        servers[i] = f"http://server{x}:5000/"
-        serverName.append(f"server{x}")
-        print(consistentHashMap.getServers())
-        server_hash["server"+str(x)] = ["server"+str(x), str(x)]
+        name = f"server{x}"
+        helper.createServer(x, name)
+        consistentHashMap.addServer(x, name)
+        servers[name] = [x, f"http://{get_container_ip(name)}:5000/"]
+        server_hash[x] = name
         currentNumberofServers+=1
 
     logging.info("***********************************")
     logging.info(os.popen(f"docker ps -a").read())
+    start_health_check_thread()
     app.run(host="0.0.0.0", port=5000, threaded=True)

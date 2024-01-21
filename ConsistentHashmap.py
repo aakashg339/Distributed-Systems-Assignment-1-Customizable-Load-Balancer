@@ -52,10 +52,13 @@ class ConsistentHashmapImpl:
 
     # removing virtual server from hashmap. 
     def removeServer(self, serverId, serverName):
-        for i in range(1, self.virtualServers+1): 
-            if self.occupied_slots[i] == serverId : 
+        count  = 0
+        for i in range(0, self.slotsInHashMap): 
+            if int(self.occupied_slots[i]) == int(serverId) : 
+                count+=1
                 self.occupied_slots[i] = -1
         self.servers.remove(serverName)
+
         # for virtualServerNumber in range(1, self.virtualServers+1):
         #     virtualServerHashValue = self.calculateVirtualServerHashValue(serverId, virtualServerNumber)
         #     numberOfCellsChecked = 0
@@ -118,6 +121,10 @@ class ConsistentHashmapImpl:
             self.hashmap[requestHashValue]['request'] = requestId
         self.sorted_keys.append(requestHashValue)
         self.sorted_keys.sort()
+        while self.occupied_slots[requestHashValue] == -1:
+            requestHashValue = (requestHashValue+1)%self.slotsInHashMap
+
+        print(self.occupied_slots)
         return self.occupied_slots[requestHashValue]
     
     # removing request from hashmap.
