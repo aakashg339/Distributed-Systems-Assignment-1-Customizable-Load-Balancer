@@ -13,7 +13,7 @@ RUN apt-get -y install sudo
 # Setting timezone which is required for docker installation
 RUN apt-get update && \
     apt-get -y install sudo tzdata && \
-    sudo ln -fs /usr/share/zoneinfo/Your/Desired/Timezone /etc/localtime && \
+    sudo ln -fs /usr/share/zoneinfo/Asia/Kolkata /etc/localtime && \
     sudo dpkg-reconfigure --frontend noninteractive tzdata && \
     apt-get clean
 
@@ -34,7 +34,7 @@ RUN sudo apt-get update
 RUN sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Installing python3, pip3 and other dependencies(flask)
-RUN apt-get update && apt-get install -y python3 python3-pip && pip3 install flask && pip3 install requests
+RUN apt-get install -y python3 python3-pip && pip3 install flask && pip3 install requests
 
 ENV USER=theuser
 RUN adduser --home /home/$USER --disabled-password --gecos GECOS $USER \

@@ -14,9 +14,11 @@ def hash_function(value):
 
 #     return os.popen(f'docker run --name {container_name} -p 5010:5000 --network my_network -e SERVER_ID={id} -d serverimage').read()
 
+def get_container_ip(container_name):
+    return os.popen(f'docker inspect -f "{{{{.NetworkSettings.Networks.my_network.IPAddress}}}}" {container_name}').read().strip()
 
 
 
 def createServer(id, container_name):
     os.popen(f"docker stop {container_name}")
-    return os.popen(f'docker run --name {container_name} --network my_network -e SERVER_ID={id} -d serverimage').read()
+    return os.popen(f'docker run --name {container_name} --network my_network -e SERVER_ID={id} -p 5000:5000 -d serverimage').read()
