@@ -11,7 +11,7 @@ from ConsistentHashmap import ConsistentHashmapImpl
 app = Flask(__name__)
 
 replicas = []
-# os.popen(f"docker build -t serverimage ./Server")
+# os.popen(f"sudo docker build -t serverimage ./Server")
 
 N = 3
 currentNumberofServers = 0
@@ -61,7 +61,7 @@ def health_check():
                 if not check_server_health(server_url[1]):
                     id = servers_copy[server_name][0]
                     logging.debug(f"Server : {server_name} is down. Removing from the pool.")
-                    os.system(f'docker stop {server_name} && docker rm {server_name}')
+                    os.system(f'sudo docker stop {server_name} && sudo docker rm {server_name}')
                     del servers[server_name]
                     del server_hash[id]
                     removeServer(id)
@@ -72,12 +72,13 @@ def health_check():
             while currentNumberofServers < 3:
                 x = getServerID()
                 name = f"server{x}"
+                port = 5000 + x
                 logging.debug(f"Creating new Server :{name}")
                 print(currentNumberofServers)
                 logging.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-                helper.createServer(x, name)
+                helper.createServer(x, name, port)
                 consistentHashMap.addServer(x, name)
-                servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+                servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
                 server_hash[x] = name
                 currentNumberofServers+=1
 
@@ -150,9 +151,10 @@ def add_replicas():
     for id in hostnames:
         x = getServerID()
         name = id
-        helper.createServer(x, name)
+        port = 5000 + x
+        helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
         server_hash[x] = name
         currentNumberofServers+=1
 
@@ -211,7 +213,7 @@ def remove_server():
 
     global currentNumberofServers
     for name in hostnames : 
-        os.system(f'docker stop {name} && docker rm server{name}')
+        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -222,7 +224,7 @@ def remove_server():
     # If any the spcified hostnames are less the number of containers to be actually removed 
     while n!=0 : 
         name = server_hash[consistentHashMap.getRandomServerId()]
-        os.system(f'docker stop {name} && docker rm server{name}')
+        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -260,21 +262,22 @@ def route_to_replica(path):
 
 if __name__ =='__main__':
     logging.info("***********************************")
-    start_health_check_thread()
-    # logging.debug(os.popen("docker rm -f  $(docker ps -aq)").read())
+    #start_health_check_thread()
+    # logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
     try:
-        logging.info(os.popen(f"docker network create my_network").read())
+        logging.info(os.popen(f"sudo docker network create my_network").read())
     except:
         logging.info("Network my_network already exists.")
     for i in range(1, 4):
         x = getServerID()
         name = f"server{x}"
-        helper.createServer(x, name)
+        port = 5000 + x
+        helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
         server_hash[x] = name
         currentNumberofServers+=1
 
     logging.info("***********************************")
-    logging.info(os.popen(f"docker ps -a").read())
+    logging.info(os.popen(f" sudo docker ps -a").read())
     app.run(host="0.0.0.0", port=5000, threaded=True)
