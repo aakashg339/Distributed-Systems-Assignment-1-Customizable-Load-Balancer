@@ -1,49 +1,65 @@
-To Run the docker image
-- docker build -t < any name of the image > . (either this if you are in the directory where docker file resides or instead of . specify the path)
-- docker images (to view the docker images)
-- sudo docker run -p < any valid port >:5000 -e "SERVER_ID=< any number >" < any name of the image >
-- sudo docker ps : To see ll the running images
-- sudo docker stop < container id >
+**Distributed Systems Assignment: Custom Load Balancer**
+**Overview**
 
-TEST 21/01/2024 - 00:22AM 
-Server distribution now working.
+This assignment involves the design and implementation of a custom load balancer within a distributed system. The objective is to evenly distribute client requests across a set of server instances using consistent hashing. This project is crucial for understanding the principles behind request routing, load balancing, and the handling of server failures in distributed environments.
+Environment Setup
 
-Running :
-go inside Server folder 
-then RUN : 
-1. docker build -t serverimage .
-2. cd .. 
-3. docker rm -f  $(docker ps -aq) (Repeat this in between the next call)
-4. python3 load_balancer.py 
+    Programming Language: Python 3.8+
+    Dependencies: Flask, hashlib, Docker
+    Tools: Docker for containerization, Postman or curl for testing
 
-then opem the address : http://127.0.0.1:5000/home 
-this should result in different servers getting called. 
+**Getting Started**
 
-Day Successfully wasted :) :) 
+Clone the repository and navigate into the project directory:
 
+bash Command:
+git clone <repository-url>
+cd <project-directory>
 
-NOTE :: 
-docker-compose has not yet set been set up 
+Install the required Python dependencies:
 
+bash Command:
+pip3 install -r requirements.txt
 
+Build and run the Docker containers for the servers:
 
-Jan 21 19:27 PM 
+bash Command
+docker-compose up --build -d
 
-Load Balancer now in working condition. 
+**Task Breakdown**
+**Task 1: Simple Web Server**
 
-Added the things below 
-- Added the health check for the servers that makes sure that a minimum of N(3 initially) servers are running every time 
-- Make adjustments to handle concurrent requests and deletion/maintainance of servers
-- Handled some edge cases for all the /add, /rem and /<path> methods 
+Implemented a basic Flask web server that listens on port 5000. The server has two endpoints:
 
+    /: Returns a simple greeting.
+    /heartbeat: Returns a 200 OK status to indicate the server is alive.
 
-How to use ? 
-Go inside Server folder 
-then RUN : 
-1. docker build -t serverimage .
-2. cd .. 
-<!-- 3. docker rm -f  $(docker ps -aq) (Repeat this in between the next call) --> // Not needed now, I have called this from within the load-balancer. 
-3. python3 load_balancer.py
+To run the server:
 
-then opem the address : http://127.0.0.1:5000/home 
-this should result in different servers getting called. 
+bash Command:
+python server.py
+
+**Task 2: Consistent Hashing**
+
+Developed a consistent hashing module to distribute incoming requests evenly across the available servers. This module uses the MD5 hashing algorithm to ensure a uniform distribution of hash values.
+Task 3: Load Balancer Implementation
+
+The load balancer, built with Flask, routes incoming requests to the server instances based on the consistent hashing algorithm. It monitors server health through the /heartbeat endpoint and reroutes traffic in case of failures.
+
+To start the load balancer:
+
+bash Command:
+python load_balancer.py
+
+Task 4: Analysis and Testing
+
+Conducted performance tests to evaluate the load balancer's efficiency in request distribution and failover mechanisms. The analysis includes response time measurements and server load distribution under various conditions.
+
+**Testing**
+
+Use Postman or curl to send requests to the load balancer and observe the routing of requests to different server instances.
+
+Example curl request:
+
+bash Command:
+curl http://localhost:8000/
