@@ -17,6 +17,9 @@ def hash_function(value):
 def get_container_ip(container_name):
     return os.popen(f'sudo docker inspect -f "{{{{.NetworkSettings.Networks.my_network.IPAddress}}}}" {container_name}').read().strip()
 
+def get_container_iD(container_name):
+    return os.popen(f'sudo docker ps -aqf "name={container_name}"').read().strip()
+
 
 
 def createServer(id, container_name, port):

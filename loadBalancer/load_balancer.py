@@ -248,9 +248,8 @@ def remove_server():
 def route_to_replica(path):
     container_id = consistentHashMap.getContainerID(random.randint(100000, 999999)  )
     container_name = server_hash[container_id]
-    container_ip = helper.get_container_ip(container_name)
     server_url = servers[container_name][1]+str(path)
-    logging.debug(f"Attempting to access container: {container_name} with IP: {container_ip}")
+    logging.debug(f"Attempting to access container: {container_name} with URL: {server_url}")
     try:
         response = requests.get(server_url)
         logging.debug(f"Response from container: {response.text}")
@@ -274,7 +273,8 @@ if __name__ =='__main__':
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
+        servers[name] = [x, f"http://{name}:5000/"]
+        print(servers[name])
         server_hash[x] = name
         currentNumberofServers+=1
 
