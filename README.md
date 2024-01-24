@@ -47,3 +47,26 @@ then RUN :
 
 then opem the address : http://127.0.0.1:5000/home 
 this should result in different servers getting called. 
+
+
+
+IMP : 
+docker run -v /var/run/docker.sock:/var/run/docker.sock -it your_image_name
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes Jan 23 2024
+
+1. simlified the Consistent Hashing function 
+2. introduced quadratic hashing 
+3. made requests id as a 6 digit random number 
+4. Now the loadbalancer is successfully running inside a container and spawning the servers ..
+
+NEW ISSUE : 
+helper.get_container_ip() is not returning anything .. If that is fixed, this will be almost complete. 
+
+
+RUNNING : 
+1. go to Server/  => then run :          docker build -t serverimage . 
+2. go to loadBalancer/ =>  then run :    docker build -t loadbalancer 
+3. run the command : docker run -p 5000:5000 --privileged=true -v /var/run/docker.sock:/var/run/docker.sock -it loadbalancer

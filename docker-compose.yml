@@ -1,19 +1,32 @@
-version: "3.9"
+version: '3.9'
+
 services:
-  servicename:
-    build: ./
-    image: testimage
-    container_name: testcontainer
+  server:
+    build:
+      context: ./Server
+    image: serverimage
+    networks:
+      - my_network
+    restart: always
+
+  load_balancer:
+    build:
+      context: ./loadBalancer
+    image: mainimage
     ports:
       - "5000:5000"
     volumes:
-      - //./pipe/docker_engine/:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
     privileged: true
     networks:
-      net1:
-        aliases:
-          - testcontainer
+      - my_network
+    restart: always
+    depends_on:
+      - server
+    mem_limit: 1g
     environment:
-      SERVER_ID: 0
+      - SERVER_IMAGE_NAME=serverimage
+
 networks:
-  net1:
+  my_network:
+    driver: bridge
