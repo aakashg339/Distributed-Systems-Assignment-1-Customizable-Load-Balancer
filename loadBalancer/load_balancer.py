@@ -11,7 +11,10 @@ from ConsistentHashmap import ConsistentHashmapImpl
 app = Flask(__name__)
 
 replicas = []
-# os.popen(f"sudo docker build -t serverimage ./Server")
+
+#--------------------------------------------------------------------------
+# Initial Config
+#--------------------------------------------------------------------------
 
 N = 3
 currentNumberofServers = 0
@@ -25,7 +28,6 @@ max_servers = slotsInHashMap//virtualServers
 max_request = 100000
 server_hash = {}
 server_ids = [0] * max_servers
-# servers_lock = threading.Lock()
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -53,8 +55,6 @@ def health_check():
     try:
         while True:
             time.sleep(5)
-            # with servers_lock:
-                # Create a copy of the servers dictionary
             servers_copy = dict(servers)
 
             for server_name, server_url in servers_copy.items():
@@ -68,23 +68,20 @@ def health_check():
                     consistentHashMap.removeServer(id, server_name)
                     currentNumberofServers -= 1
 
-            # Check if the number of running servers is less than 3
-            while currentNumberofServers < 3:
+            # Check if the number of running servers is less than N
+            while currentNumberofServers < N:
                 x = getServerID()
                 name = f"server{x}"
                 port = 5000 + x
-                logging.debug(f"Creating new Server :{name}")
-                print(currentNumberofServers)
-                logging.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
                 helper.createServer(x, name, port)
                 consistentHashMap.addServer(x, name)
-                servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
+                servers[name] = [x, f"http://{name}:5000/"]
+                print(servers[name])
                 server_hash[x] = name
                 currentNumberofServers+=1
 
             time.sleep(5)
     except Exception as e:
-        print("****************************************8**")
         logging.exception(f"Exception in health_check: {e}")
 
 
@@ -117,9 +114,10 @@ def add_replicas():
     payload = request.get_json()
     n = payload.get('n')
     hostnames = payload.get('hostnames', [])
-    print("^^^^^^^^^^^^^^^^^^^^^^")
-    print(hostnames)
-    # Sanity checks ---------------------------------------------------------------------
+
+    # ---------------------------------------------------------------------
+    # Sanity checks
+    # ---------------------------------------------------------------------
     if len(hostnames) > n : 
         response_json = {
             "message": {
@@ -154,11 +152,13 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
+        servers[name] = [x, f"http://{name}:5000/"]
+        print(servers[name])
         server_hash[x] = name
         currentNumberofServers+=1
 
-    replicas = consistentHashMap.getServers() 
+
+    replicas = consistentHashMap.getServers()
     response_json = {
         "message": {
             "N": len(replicas),
@@ -176,10 +176,10 @@ def remove_server():
     payload = request.get_json()
     n = payload.get('n')
     hostnames = payload.get('hostnames', [])
-    print("****************************************************")
-    print(hostnames)
-    print(replicas)
-    # Sanity Checks ---------------------------------------------------------------------
+    
+    # ---------------------------------------------------------------------
+    # Sanity checks
+    # ---------------------------------------------------------------------
     if len(hostnames)>n: 
         response_json = {
             "message": {
@@ -199,8 +199,6 @@ def remove_server():
             }
             return jsonify(response_json), 400
         
-    
-    # TODO : Should we allow to remove 'all' servers ? 
     if n > len(replicas) : 
         response_json = {
             "message": {
@@ -209,8 +207,8 @@ def remove_server():
             "status": "failure"
         }
         return jsonify(response_json), 400
+    
     # handling remove servers 
-
     global currentNumberofServers
     for name in hostnames : 
         os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
@@ -260,14 +258,13 @@ def route_to_replica(path):
 
 
 if __name__ =='__main__':
-    logging.info("***********************************")
-    #start_health_check_thread()
-    # logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
+    start_health_check_thread()
+    logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
     try:
         logging.info(os.popen(f"sudo docker network create my_network").read())
     except:
         logging.info("Network my_network already exists.")
-    for i in range(1, 4):
+    for i in range(1, N+1):
         x = getServerID()
         name = f"server{x}"
         port = 5000 + x
@@ -278,6 +275,5 @@ if __name__ =='__main__':
         server_hash[x] = name
         currentNumberofServers+=1
 
-    logging.info("***********************************")
     logging.info(os.popen(f" sudo docker ps -a").read())
     app.run(host="0.0.0.0", port=5000, threaded=True)
