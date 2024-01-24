@@ -1,15 +1,28 @@
-pip install requests matplotlib
 import requests
 import matplotlib.pyplot as plt
 import threading
 import time
 
 # Function to send asynchronous requests to the load balancer
+x = 0
 def send_requests(url, count, result_dict):
+    global x
+    x+=1
+    print(x)
     for _ in range(count):
         try:
             response = requests.get(url)
-            server = response.headers['Server']  # Assuming server name is in the headers
+            ser = ""
+            cond = False
+            for i in response.text : 
+                if i == '[' : 
+                    cond = True
+                    continue
+                elif i == ']':
+                    break
+                if cond : 
+                    ser+=i  
+            server = ser 
             result_dict[server] = result_dict.get(server, 0) + 1
         except requests.RequestException as e:
             print(f"Request failed: {e}")
@@ -35,12 +48,6 @@ def load_distribution_analysis(url, total_requests):
     plot_load_distribution(result_dict)
 
 # usage
-load_balancer_url = "http://localhost:5000"  # Replace with your load balancer URL
+load_balancer_url = "http://127.0.0.1:5000/home"  # Replace with your load balancer URL
 total_requests = 10000
 load_distribution_analysis(load_balancer_url, total_requests)
-
-
-
-    # The send_requests function sends a specified number of requests to your load balancer and records the server each request is handled by.
-    # The plot_load_distribution function generates a bar chart showing the number of requests handled by each server.
-    # The load_distribution_analysis function orchestrates the sending of asynchronous requests and plotting the results.

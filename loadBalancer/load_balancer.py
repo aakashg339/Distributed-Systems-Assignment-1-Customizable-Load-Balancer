@@ -16,7 +16,7 @@ replicas = []
 # Initial Config
 #--------------------------------------------------------------------------
 
-N = 3
+N = 3 
 currentNumberofServers = 0
 serverName = []
 servers = {}
@@ -240,6 +240,13 @@ def remove_server():
     }
     return jsonify(response_json), 200
     
+
+@app.route('/servernumber', methods=['POST'])
+def ChangeServerNumber(path):
+    global N
+    payload = request.get_json()
+    n = payload.get('n')
+    N = n
 
 
 @app.route('/<path>', methods=['GET'])

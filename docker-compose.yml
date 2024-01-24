@@ -1,18 +1,9 @@
 version: '3.9'
 
 services:
-  server:
-    build:
-      context: ./Server
-    image: serverimage
-    networks:
-      - my_network
-    restart: always
-
   load_balancer:
     build:
       context: ./loadBalancer
-    image: mainimage
     ports:
       - "5000:5000"
     volumes:
@@ -21,11 +12,19 @@ services:
     networks:
       - my_network
     restart: always
-    depends_on:
-      - server
-    mem_limit: 1g
     environment:
       - SERVER_IMAGE_NAME=serverimage
+      - SERVER_NO = 3
+
+  server:
+    build:
+      context: ./Server
+    image: serverimage
+    networks:
+      - my_network
+    restart: always
+    expose:
+      - "5000"
 
 networks:
   my_network:
