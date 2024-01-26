@@ -1,3 +1,5 @@
+import random
+
 # Consistant Hash Map Implementation.
 # It is possible client and server map to same hash value. Then store in same cell.
 class ConsistentHashmapImpl:
@@ -59,17 +61,5 @@ class ConsistentHashmapImpl:
         return self.occupied_slots[requestHashValue]
 
 
-
-# Testing the Consistent Hash Map Implementation.
-# ss = [1, 2, 3]
-# requestIds = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-# virtualServers = 9
-# slotsInHashMap = 512
-# consistentHashmapImpl = ConsistentHashmapImpl([1,2,3], virtualServers, slotsInHashMap)
-# print(ss)
-# for serverId in ss:
-#     print(ss)
-#     print(consistentHashmapImpl.addServer(serverId, str(serverId)))
-
-# for requestId in requestIds:
-#     print(consistentHashmapImpl.getContainerID(requestId))
+    def getRandomServerId(self): 
+        return random.choice(self.servers)
