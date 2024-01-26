@@ -3,7 +3,7 @@ import aiohttp
 import requests
 import matplotlib.pyplot as plt
 import statistics
-import analysis
+import Analysis.analysis1 as analysis1
 
 async def send_request(session, url):
     async with session.get(url) as response:
@@ -46,5 +46,5 @@ for n in range(1, 6):
         print(requests.post('http://localhost:5000/add', json={"n": 1, "hostnames": [Server_Ids[n-2]]}).text)
         print(requests.get('http://localhost:5000/serverno').text)
     
-    analysis.runner()
+    analysis1.runner()
    

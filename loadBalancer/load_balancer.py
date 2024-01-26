@@ -137,7 +137,7 @@ def add_replicas():
         if name in list(servers.keys()):
             duplicates = True
             break
-    if len(set(hostnames))<n:
+    if len(set(hostnames))<len(hostnames):
         duplicates = True
     if duplicates == True:
         return {
@@ -159,6 +159,18 @@ def add_replicas():
         servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
+        n-=1
+    
+    while n>0 : 
+        x = getServerID()
+        name = f"server{x}"
+        port = 5000 + x
+        helper.createServer(x, name, port)
+        consistentHashMap.addServer(x, name)
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        server_hash[x] = name
+        currentNumberofServers+=1
+        n-=1
 
 
     replicas = consistentHashMap.getServers()
@@ -224,7 +236,7 @@ def remove_server():
     
     # If any the spcified hostnames are less the number of containers to be actually removed 
     while n!=0 : 
-        name = server_hash[consistentHashMap.getRandomServerId()]
+        name = consistentHashMap.getRandomServerId()
         os.system(f' docker stop {name} &&  docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]

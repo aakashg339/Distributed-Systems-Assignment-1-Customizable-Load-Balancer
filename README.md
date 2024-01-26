@@ -1,6 +1,6 @@
 # Custom Load Balancer
 <p align="center">
-      <img src="images/overview.png" width="90%"/><br><strong>Fig.1: Overview</strong>
+      <img src="images/overview.png" width="90%"/><br><strong>Overview</strong>
 </p>
 
 # Overview
@@ -155,13 +155,13 @@ This Folder includes a Dockerfile to containerize the load balancer. Additionall
 
 # Analysis
 
-We ran 10000 requests on the load-balancer and here are the results
+### We ran 10000 requests on the load-balancer and here are the results
 
 <p align="center">
       <img src="images/a1.png" width="90%"/><br><strong>Initial 3 servers</strong>
 </p>
 
-The next few are the analysis results when the number of servers are increased from 2 to 6. 
+### The next few are the analysis results when the number of servers are increased from 2 to 6. 
 
 <p align="center">
       <img src="images/2_servers.png" width="90%"/><br><strong>2 Servers</strong>
@@ -179,11 +179,48 @@ The next few are the analysis results when the number of servers are increased f
       <img src="images/6_servers.png" width="90%"/><br><strong>6 Servers</strong>
 </p>
 
+### Finally, the average load of the servers at each run, when the number of Servers are inceased from 2 to 6. 
+<p align="center">
+      <img src="images/a2_analysis.png" width="90%"/><br><strong>Fig. A2</strong>
+</p>
+
+
+## Verifying different Endpoints : 
+#### Initial Configuration of 3 servers is followed. 
+
+```
+xeno@xeno-Distributed-Systems-Assignment-1-Customizable-Load-Balancer/Analysis$ python3 endpoints_test.py 
+Endpoint /rep:
+Response Code:  200
+Response JSON:  {'message': {'N': 3, 'replicas': ['server18', 'server33', 'server47']}, 'status': 'successful'}
+
+Endpoint /add:
+Request Payload:  {'n': 5, 'hostnames': ['S5', 'S4', 'S10', 'S11']}
+Response Payload:  {'message': {'N': 8, 'replicas': ['server18', 'server33', 'server47', 'S5', 'S4', 'S10', 'S11', 'server50']}, 'status': 'successful'}
+
+Endpoint /rm:
+Request Payload:  {'n': 3, 'hostnames': ['S5', 'S4']}
+Response Payload :  {'message': {'replicas': ['server18', 'server47', 'S10', 'S11', 'server50']}, 'status': 'success'}
+
+Endpoint /home:
+Request URL: http://localhost:5000/home
+Response : {'message': 'Hello from Server: [29]', 'status': 'successfull'}
+```
+
+<p align="center">
+      <img src="images/endpoints_test.png" width="90%"/><br><strong>Test</strong>
+</p>
+
+
 
 Server Respawning Can be seen here : 
 <p align="center">
       <img src="images/spawn.png" width="90%"/><br><strong>Spawning</strong>
 </p>
+
+
+## Hash Function changes and run : 
+
 
 
 
