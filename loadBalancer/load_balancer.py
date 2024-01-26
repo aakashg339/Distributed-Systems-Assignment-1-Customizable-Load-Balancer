@@ -27,15 +27,19 @@ counter = 1
 max_servers = slotsInHashMap//virtualServers
 max_request = 100000
 server_hash = {}
-server_ids = [0] * max_servers
+server_ids = [0] * (max_servers+1)
 
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 def getServerID():
-    for i in range(1, max_servers + 1): 
-        if server_ids[i] == 0: 
-            server_ids[i] = 1
-            return i
+    counter = 1000
+    while True and counter > 0: 
+        x  = random.randint(1, max_servers)
+        if server_ids[x] == 0: 
+            server_ids[x] = 1
+            return x
+        counter-=1
     return -1
 
 def removeServer(i):
@@ -60,8 +64,8 @@ def health_check():
             for server_name, server_url in servers_copy.items():
                 if not check_server_health(server_url[1]):
                     id = servers_copy[server_name][0]
-                    logging.debug(f"Server : {server_name} is down. Removing from the pool.")
-                    os.system(f'sudo docker stop {server_name} && sudo docker rm {server_name}')
+                    print(f"Server : {server_name} is down. Removing from the pool.")
+                    # os.system(f' docker stop {server_name} &&  docker rm {server_name}')
                     del servers[server_name]
                     del server_hash[id]
                     removeServer(id)
@@ -70,16 +74,16 @@ def health_check():
 
             # Check if the number of running servers is less than N
             while currentNumberofServers < N:
+                print("Spawning new Server")
                 x = getServerID()
                 name = f"server{x}"
                 port = 5000 + x
                 helper.createServer(x, name, port)
                 consistentHashMap.addServer(x, name)
-                servers[name] = [x, f"http://{name}:5000/"]
-                print(servers[name])
+                servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+                # print(servers[name])
                 server_hash[x] = name
                 currentNumberofServers+=1
-
             time.sleep(5)
     except Exception as e:
         logging.exception(f"Exception in health_check: {e}")
@@ -152,8 +156,7 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{name}:5000/"]
-        print(servers[name])
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
 
@@ -211,7 +214,7 @@ def remove_server():
     # handling remove servers 
     global currentNumberofServers
     for name in hostnames : 
-        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
+        os.system(f' docker stop {name} &&  docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -222,7 +225,7 @@ def remove_server():
     # If any the spcified hostnames are less the number of containers to be actually removed 
     while n!=0 : 
         name = server_hash[consistentHashMap.getRandomServerId()]
-        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
+        os.system(f' docker stop {name} &&  docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -240,6 +243,12 @@ def remove_server():
     }
     return jsonify(response_json), 200
     
+@app.route('/serverno', methods = ['GET'])
+def server_number():
+    global N 
+    N+=1
+    return jsonify({"n" : N}), 200
+
 
 
 @app.route('/<path>', methods=['GET'])
@@ -247,10 +256,10 @@ def route_to_replica(path):
     container_id = consistentHashMap.getContainerID(random.randint(100000, 999999)  )
     container_name = server_hash[container_id]
     server_url = servers[container_name][1]+str(path)
-    logging.debug(f"Attempting to access container: {container_name} with URL: {server_url}")
+    # logging.debug(f"Attempting to access container: {container_name} with URL: {server_url}")
     try:
         response = requests.get(server_url)
-        logging.debug(f"Response from container: {response.text}")
+        # logging.debug(f"Response from container: {response.text}")
         return response.text, response.status_code
     except requests.exceptions.RequestException as e:
         logging.error(f"Error connecting to {server_url}: {e}")
@@ -258,10 +267,9 @@ def route_to_replica(path):
 
 
 if __name__ =='__main__':
-    start_health_check_thread()
-    logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
+    # logging.debug(os.popen(" docker rm -f  $( docker ps -aq)").read())
     try:
-        logging.info(os.popen(f"sudo docker network create my_network").read())
+        logging.info(os.popen(f" docker network create my_network").read())
     except:
         logging.info("Network my_network already exists.")
     for i in range(1, N+1):
@@ -270,10 +278,11 @@ if __name__ =='__main__':
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{name}:5000/"]
-        print(servers[name])
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
+        
+    start_health_check_thread()
 
-    logging.info(os.popen(f" sudo docker ps -a").read())
+    # logging.info(os.popen(f"  docker ps -a").read())
     app.run(host="0.0.0.0", port=5000, threaded=True)
