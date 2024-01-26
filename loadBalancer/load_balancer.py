@@ -16,7 +16,7 @@ replicas = []
 # Initial Config
 #--------------------------------------------------------------------------
 
-N = 3
+N = 2
 currentNumberofServers = 0
 serverName = []
 servers = {}

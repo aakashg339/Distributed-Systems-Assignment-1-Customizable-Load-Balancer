@@ -50,10 +50,18 @@ docker run --network my_network -p 5000:5000 --privileged=true -v /var/run/docke
 
 # Consistent Hash Map 
 
+<p align="center">
+      <img src="images/hash_map.png" width="90%"/><br><strong>Circular structure of the hash map</strong>
+</p>
+
+
+
 ### Implementation Details
 
 - Two client requests may be mapped to the same slot in the hash map. However, if there is a conflict between two server instances, Quadratic probing is applied to find the next suitable slot.
 - Server containers and virtual servers are distinct concepts. Server containers are the number of containers the load balancer manages to handle requests. A virtual server is a theoretical concept that repeats the location of server containers in the consistent hash, aiding better load distribution in case of failure. Virtual servers are not directly tied to the actual number of server containers.
+
+
 
 ### Hash Functions
 
@@ -179,10 +187,38 @@ This Folder includes a Dockerfile to containerize the load balancer. Additionall
       <img src="images/6_servers.png" width="90%"/><br><strong>6 Servers</strong>
 </p>
 
-### Finally, the average load of the servers at each run, when the number of Servers are inceased from 2 to 6. 
+### Finally, the average load of the servers at each run, when the number of Servers are inceased from 2 to 6.
 <p align="center">
       <img src="images/a2_analysis.png" width="90%"/><br><strong>Fig. A2</strong>
 </p>
+
+### Line chart for another run 
+<p align="center">
+      <img src="images/line2.png" width="90%"/><br><strong>Line Chart</strong>
+</p>
+
+
+## After using a different hash function as follows : 
+
+1. **Request Mapping Hash Function (H(i)):** `i^2 + 2i + 199`
+2. **Virtual Server Mapping Hash Function (Φ(i, j)):** `i^2 + j^2 + 2*i*j + 199`
+
+## The following analysis was found : 
+<p align="center">
+      <img src="images/myhash_a1.png" width="90%"/><br><strong>Analysis 1(Average load across 3 servers)</strong>
+</p>
+
+<p align="center">
+      <img src="images/my_hash_a2_bar.png" width="90%"/><br><strong>Analysis 2 Bar(Average load across 6 servers)</strong>
+</p>
+
+<p align="center">
+      <img src="images/my_hash_a2_line.png" width="90%"/><br><strong>Analysis 2 Line Chart(Average load across 6 servers)</strong>
+</p>
+
+
+## Explanation : 
+
 
 
 ## Verifying different Endpoints : 

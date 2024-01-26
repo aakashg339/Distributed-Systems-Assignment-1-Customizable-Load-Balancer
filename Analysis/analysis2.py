@@ -88,3 +88,11 @@ plt.xlabel('Server IDs')
 plt.ylabel('Average Load per Server')
 plt.title('Average Load per Server Across Iterations')
 plt.show()
+
+
+plt.plot(list(average_loads.keys()), list(average_loads.values()), marker='o', linestyle='-')
+plt.xlabel('Server IDs')
+plt.ylabel('Average Load per Server')
+plt.title('Average Load per Server Across Iterations')
+plt.grid(True)
+plt.show()

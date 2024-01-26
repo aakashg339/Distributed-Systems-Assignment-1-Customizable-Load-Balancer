@@ -59,3 +59,5 @@ total_requests = 10000
 
 def runner():
     load_distribution_analysis(load_balancer_url, total_requests)
+
+runner()

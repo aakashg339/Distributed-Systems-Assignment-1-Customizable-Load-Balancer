@@ -8,16 +8,27 @@ class ConsistentHashmapImpl:
         self.slotsInHashMap = slotsInHashMap
         self.occupied_slots = [-1]*slotsInHashMap
     
+    # def calculateVirtualServerHashValue(self, serverId, virtualServerNumber):
+    #     sid = int(serverId)
+    #     vsn = int(virtualServerNumber)
+    #     hashingValueOfVirtualServer = ((sid ** 2) + (vsn ** 2) + (2 * vsn) + 25) % self.slotsInHashMap
+    #     return hashingValueOfVirtualServer
+
     def calculateVirtualServerHashValue(self, serverId, virtualServerNumber):
         sid = int(serverId)
         vsn = int(virtualServerNumber)
-        hashingValueOfVirtualServer = ((sid ** 2) + (vsn ** 2) + (2 * vsn) + 25) % self.slotsInHashMap
+        hashingValueOfVirtualServer = ((sid ** 2) + (vsn ** 2) + (2*vsn*sid) + 199) % self.slotsInHashMap
         return hashingValueOfVirtualServer
     
-    def calculateRequestHashValue(self, requestId):
-        hashingValueOfRequest = (pow(requestId, 2) + (2*requestId) + 17) % self.slotsInHashMap
-        return hashingValueOfRequest
+    # def calculateRequestHashValue(self, requestId):
+    #     hashingValueOfRequest = (pow(requestId, 2) + (2*requestId) + 17) % self.slotsInHashMap
+    #     return hashingValueOfRequest
     
+    def calculateRequestHashValue(self, requestId):
+        hashingValueOfRequest = ((requestId**2) + 2*requestId + 199) % self.slotsInHashMap
+        return hashingValueOfRequest
+
+
     def getServers(self): 
         return self.servers
 
