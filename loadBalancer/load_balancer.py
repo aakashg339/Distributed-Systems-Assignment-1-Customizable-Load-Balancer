@@ -78,7 +78,7 @@ def health_check():
                 logging.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
                 helper.createServer(x, name, port)
                 consistentHashMap.addServer(x, name)
-                servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
+                servers[name] = [x, f"http://{name}:5000/"]
                 server_hash[x] = name
                 currentNumberofServers+=1
 
@@ -154,7 +154,7 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:{port}/"]
+        servers[name] = [x, f"http://{name}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
 
@@ -261,7 +261,7 @@ def route_to_replica(path):
 
 if __name__ =='__main__':
     logging.info("***********************************")
-    #start_health_check_thread()
+    start_health_check_thread()
     # logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
     try:
         logging.info(os.popen(f"sudo docker network create my_network").read())
