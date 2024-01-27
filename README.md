@@ -1,6 +1,6 @@
 # Custom Load Balancer
 <p align="center">
-      <img src="Analysis-and-readme/images/overview.png" width="90%"/><br><strong>Overview</strong>
+      <img src="images/overview.png" width="90%"/><br><strong>Overview</strong>
 </p>
 
 # Overview
