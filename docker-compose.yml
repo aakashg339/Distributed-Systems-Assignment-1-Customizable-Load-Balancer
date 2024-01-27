@@ -12,7 +12,8 @@ services:
   load_balancer:
     build:
       context: ./loadBalancer
-    image: mainimage
+    image: loadbalancer
+    container_name: loadbalancerContainer
     ports:
       - "5000:5000"
     volumes:
@@ -21,12 +22,12 @@ services:
     networks:
       - my_network
     restart: always
-    depends_on:
-      - server
     mem_limit: 1g
     environment:
       - SERVER_IMAGE_NAME=serverimage
 
 networks:
   my_network:
+    name: my_network
+    external: true
     driver: bridge
