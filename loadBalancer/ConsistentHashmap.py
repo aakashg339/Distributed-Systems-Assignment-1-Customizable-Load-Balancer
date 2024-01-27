@@ -1,5 +1,4 @@
 import random
-
 # Consistant Hash Map Implementation.
 # It is possible client and server map to same hash value. Then store in same cell.
 class ConsistentHashmapImpl:
@@ -48,9 +47,7 @@ class ConsistentHashmapImpl:
             if int(self.occupied_slots[i]) == int(serverId) : 
                 count+=1
                 self.occupied_slots[i] = -1
-        # Checking if serverName in servers list, then remove it.
-        if serverName in self.servers:
-            self.servers.remove(serverName)
+        self.servers.remove(serverName)
 
 
     def getContainerID(self, requestId): 
@@ -61,7 +58,7 @@ class ConsistentHashmapImpl:
 
         # print(self.occupied_slots)
         return self.occupied_slots[requestHashValue]
-
-
+    
     def getRandomServerId(self): 
         return random.choice(self.servers)
+
