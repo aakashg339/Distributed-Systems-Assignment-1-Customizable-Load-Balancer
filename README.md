@@ -54,13 +54,14 @@ docker run --network my_network -p 5000:5000 --privileged=true -v /var/run/docke
       <img src="images/hash_map.png" width="90%"/><br><strong>Circular structure of the hash map</strong>
 </p>
 
-
-
 ### Implementation Details
 
 - Two client requests may be mapped to the same slot in the hash map. However, if there is a conflict between two server instances, Quadratic probing is applied to find the next suitable slot.
 - Server containers and virtual servers are distinct concepts. Server containers are the number of containers the load balancer manages to handle requests. A virtual server is a theoretical concept that repeats the location of server containers in the consistent hash, aiding better load distribution in case of failure. Virtual servers are not directly tied to the actual number of server containers.
 
+<p align="center">
+      <img src="images/hash.jpeg" width="90%"/><br><strong>Working of Consistent hash map</strong>
+</p>
 
 
 ### Hash Functions
