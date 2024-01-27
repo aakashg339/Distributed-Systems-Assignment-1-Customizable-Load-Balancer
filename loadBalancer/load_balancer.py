@@ -11,10 +11,7 @@ from ConsistentHashmap import ConsistentHashmapImpl
 app = Flask(__name__)
 
 replicas = []
-
-#--------------------------------------------------------------------------
-# Initial Config
-#--------------------------------------------------------------------------
+# os.popen(f"sudo docker build -t serverimage ./Server")
 
 N = 3
 currentNumberofServers = 0
@@ -27,15 +24,20 @@ counter = 1
 max_servers = slotsInHashMap//virtualServers
 max_request = 100000
 server_hash = {}
-server_ids = [0] * max_servers
+server_ids = [0] * (max_servers+1)
+# servers_lock = threading.Lock()
 
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 def getServerID():
-    for i in range(1, max_servers + 1): 
-        if server_ids[i] == 0: 
-            server_ids[i] = 1
-            return i
+    counter = 1000
+    while True and counter > 0: 
+        x  = random.randint(1, max_servers)
+        if server_ids[x] == 0: 
+            server_ids[x] = 1
+            return x
+        counter-=1
     return -1
 
 def removeServer(i):
@@ -55,6 +57,8 @@ def health_check():
     try:
         while True:
             time.sleep(5)
+            # with servers_lock:
+                # Create a copy of the servers dictionary
             servers_copy = dict(servers)
 
             for server_name, server_url in servers_copy.items():
@@ -62,26 +66,32 @@ def health_check():
                     id = servers_copy[server_name][0]
                     logging.debug(f"Server : {server_name} is down. Removing from the pool.")
                     os.system(f'sudo docker stop {server_name} && sudo docker rm {server_name}')
-                    del servers[server_name]
-                    del server_hash[id]
+                    # Checking if values in map and then deleting it
+                    if server_name in servers:
+                        del servers[server_name]
+                    if id in server_hash:
+                        del server_hash[id]
                     removeServer(id)
                     consistentHashMap.removeServer(id, server_name)
                     currentNumberofServers -= 1
 
-            # Check if the number of running servers is less than N
-            while currentNumberofServers < N:
+            # Check if the number of running servers is less than 3
+            while currentNumberofServers < 3:
                 x = getServerID()
                 name = f"server{x}"
                 port = 5000 + x
+                logging.debug(f"Creating new Server :{name}")
+                print(currentNumberofServers)
+                logging.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
                 helper.createServer(x, name, port)
                 consistentHashMap.addServer(x, name)
                 servers[name] = [x, f"http://{name}:5000/"]
-                print(servers[name])
                 server_hash[x] = name
                 currentNumberofServers+=1
 
             time.sleep(5)
     except Exception as e:
+        print("****************************************8**")
         logging.exception(f"Exception in health_check: {e}")
 
 
@@ -114,10 +124,9 @@ def add_replicas():
     payload = request.get_json()
     n = payload.get('n')
     hostnames = payload.get('hostnames', [])
-
-    # ---------------------------------------------------------------------
-    # Sanity checks
-    # ---------------------------------------------------------------------
+    print("^^^^^^^^^^^^^^^^^^^^^^")
+    print(hostnames)
+    # Sanity checks ---------------------------------------------------------------------
     if len(hostnames) > n : 
         response_json = {
             "message": {
@@ -133,7 +142,7 @@ def add_replicas():
         if name in list(servers.keys()):
             duplicates = True
             break
-    if len(set(hostnames))<n:
+    if len(set(hostnames))<len(hostnames):
         duplicates = True
     if duplicates == True:
         return {
@@ -152,10 +161,21 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{name}:5000/"]
-        print(servers[name])
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
+        n-=1
+    
+    while n>0 : 
+        x = getServerID()
+        name = f"server{x}"
+        port = 5000 + x
+        helper.createServer(x, name, port)
+        consistentHashMap.addServer(x, name)
+        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        server_hash[x] = name
+        currentNumberofServers+=1
+        n-=1
 
 
     replicas = consistentHashMap.getServers()
@@ -211,7 +231,7 @@ def remove_server():
     # handling remove servers 
     global currentNumberofServers
     for name in hostnames : 
-        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
+        os.system(f' docker stop {name} &&  docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -221,8 +241,8 @@ def remove_server():
     
     # If any the spcified hostnames are less the number of containers to be actually removed 
     while n!=0 : 
-        name = server_hash[consistentHashMap.getRandomServerId()]
-        os.system(f'sudo docker stop {name} && sudo docker rm server{name}')
+        name = consistentHashMap.getRandomServerId()
+        os.system(f' docker stop {name} &&  docker rm server{name}')
         consistentHashMap.removeServer(servers[name][0], name)
         del server_hash[servers[name][0]]
         removeServer(servers[name][0])
@@ -255,11 +275,24 @@ def route_to_replica(path):
     except requests.exceptions.RequestException as e:
         logging.error(f"Error connecting to {server_url}: {e}")
         return "Error connecting to replica", 500
+    
+# Load-Balancer endpoints for all other requests. Kind of error handler
+@app.route('/', defaults={'path': ''}, methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
+@app.route('/<path:path>', methods = ['POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
+def invalidUrlHandler(path):
+    # Returning an error message stating the valid endpoints
+    errorMessage = {"message": "Invalid Endpoint",
+                    "Valid Endpoints": {"Server Endpoints" : ["/home method='GET'", "/heartbeat method='GET'"],
+                                        "Load Balancer Endpoints" : ["/rep method='GET'", "/add method='POST'", "/rm method='DELETE'"]},
+                    "status": "Unsuccessfull"}
+    
+    # Returning the JSON object along with the status code 404
+    return errorMessage, 404
 
 
 if __name__ =='__main__':
-    start_health_check_thread()
-    logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
+    logging.info("***********************************")
+    # logging.debug(os.popen("sudo docker rm -f  $(sudo docker ps -aq)").read())
     try:
         logging.info(os.popen(f"sudo docker network create my_network").read())
     except:
@@ -275,5 +308,5 @@ if __name__ =='__main__':
         server_hash[x] = name
         currentNumberofServers+=1
 
-    logging.info(os.popen(f" sudo docker ps -a").read())
+    start_health_check_thread()
     app.run(host="0.0.0.0", port=5000, threaded=True)
