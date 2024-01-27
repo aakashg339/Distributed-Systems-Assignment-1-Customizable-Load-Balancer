@@ -272,6 +272,19 @@ def route_to_replica(path):
     except requests.exceptions.RequestException as e:
         logging.error(f"Error connecting to {server_url}: {e}")
         return "Error connecting to replica", 500
+    
+# Load-Balancer endpoints for all other requests. Kind of error handler
+@app.route('/', defaults={'path': ''}, methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
+@app.route('/<path:path>', methods = ['POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
+def invalidUrlHandler(path):
+    # Returning an error message stating the valid endpoints
+    errorMessage = {"message": "Invalid Endpoint",
+                    "Valid Endpoints": {"Server Endpoints" : ["/home method='GET'", "/heartbeat method='GET'"],
+                                        "Load Balancer Endpoints" : ["/rep method='GET'", "/add method='POST'", "/rm method='DELETE'"]},
+                    "status": "Unsuccessfull"}
+    
+    # Returning the JSON object along with the status code 404
+    return errorMessage, 404
 
 
 if __name__ =='__main__':
