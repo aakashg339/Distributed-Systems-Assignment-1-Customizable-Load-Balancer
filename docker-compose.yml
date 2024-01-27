@@ -12,7 +12,7 @@ services:
   load_balancer:
     build:
       context: ./loadBalancer
-    image: mainimage
+    image: loadbalancer
     ports:
       - "5000:5000"
     volumes:

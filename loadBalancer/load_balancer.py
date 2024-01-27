@@ -66,8 +66,11 @@ def health_check():
                     id = servers_copy[server_name][0]
                     logging.debug(f"Server : {server_name} is down. Removing from the pool.")
                     os.system(f'sudo docker stop {server_name} && sudo docker rm {server_name}')
-                    del servers[server_name]
-                    del server_hash[id]
+                    # Checking if values in map and then deleting it
+                    if server_name in servers:
+                        del servers[server_name]
+                    if id in server_hash:
+                        del server_hash[id]
                     removeServer(id)
                     consistentHashMap.removeServer(id, server_name)
                     currentNumberofServers -= 1

@@ -13,3 +13,8 @@ run: check_network
 	sudo docker build -t serverimage ./Server
 	sudo docker build -t loadbalancer ./loadBalancer
 	sudo docker run -p 5000:5000 --privileged=true -v /var/run/docker.sock:/var/run/docker.sock --name my_loadbalancer_app --network my_network -it loadbalancer
+
+# Building and running the containers using docker-compose
+run_compose:
+	sudo docker-compose build
+	sudo docker-compose up load_balancer
