@@ -6,6 +6,8 @@
 # Contents
 [Overview](#overview)
 
+[How to run](#how-to-run)
+
 [Server](#server)
 
 [Consistent Hash Map](#consistent-hash-map)
@@ -14,11 +16,21 @@
 
 [Analysis](#analysis)
 
-[Assumptions And Clarifications](#assumptions-and-clarifications)
-
 # Overview
 
 A load balancer routes the requests coming from several clients asynchronously among several servers so that the load is nearly evenly distributed among them. In order to scale a particular service with increasing clients, load balancers are used to manage multiple replicas of the service to improve resource utilization and throughput. In the real world, there are various use cases of such constructs in distributed caching systems, distributed database management systems, network traffic systems, etc. To efficiently distribute the requests coming from the clients, a load balancer uses a consistent hashing data structure.The load balancer is exposed to the clients through the APIs shown in the diagram (details on the APIs are given further). There should always be N servers present to handle the requests. In the event of failure, new replicas of the server will be spawned by the load balancer to handle the requests.
+
+# How to run
+From the root folder 
+
+```bash
+# Without using docker-compose
+make run
+
+# With using docker-compose
+make run_compose
+
+```
 
 # SERVER
 A simple web server that accepts HTTP requests on port 5000 in the below endpoints.
@@ -43,22 +55,6 @@ A simple web server that accepts HTTP requests on port 5000 in the below endpoin
 ## Dockerfile
 
 To containerize the server as an image and make it deployable, a Dockerfile is provided.
-
-### Instructions
-
-### Usage
-From the root folder 
-
-```bash
-# Build Docker image
-docker build -t server-image ./Server
-
-docker build -t loadbalancer ./loadBalancer
-
-# Run Docker container
-docker run --network my_network -p 5000:5000 --privileged=true -v /var/run/docker.sock:/var/run/docker.sock -it loadbalancer
-
-```
 
 
 # Consistent Hash Map 
@@ -268,25 +264,3 @@ Server Respawning Can be seen here :
       <img src="images/spawn.png" width="90%"/><br><strong>Spawning</strong>
 </p>
 
-
-## Hash Function changes and run : 
-
-
-
-
-# Assumptions and Clarifications 
-
-
-
-
-
-
-For Running the LoadBalancer, in the root dorectory, run command : 
-```
-make run
-```
-
-RUNNING : 
-1. go to Server/  => then run :          docker build -t serverimage . 
-2. go to loadBalancer/ =>  then run :    docker build -t loadbalancer 
-3. run the command : docker run -p 5000:5000 --privileged=true -v /var/run/docker.sock:/var/run/docker.sock -it loadbalancer

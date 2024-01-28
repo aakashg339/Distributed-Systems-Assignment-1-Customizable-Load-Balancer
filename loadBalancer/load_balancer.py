@@ -161,7 +161,7 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        servers[name] = [x, f"http://{name}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
         n-=1
@@ -172,7 +172,7 @@ def add_replicas():
         port = 5000 + x
         helper.createServer(x, name, port)
         consistentHashMap.addServer(x, name)
-        servers[name] = [x, f"http://{helper.get_container_ip(name)}:5000/"]
+        servers[name] = [x, f"http://{name}:5000/"]
         server_hash[x] = name
         currentNumberofServers+=1
         n-=1
