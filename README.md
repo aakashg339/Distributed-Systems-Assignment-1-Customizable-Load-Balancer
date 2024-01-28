@@ -3,6 +3,19 @@
       <img src="images/overview.png" width="90%"/><br><strong>Overview</strong>
 </p>
 
+# Contents
+[Overview](#overview)
+
+[Server](#server)
+
+[Consistent Hash Map](#consistent-hash-map)
+
+[Load Balancer Container](#load-balancer-container)
+
+[Analysis](#analysis)
+
+[Assumptions And Clarifications](#assumptions-and-clarifications)
+
 # Overview
 
 A load balancer routes the requests coming from several clients asynchronously among several servers so that the load is nearly evenly distributed among them. In order to scale a particular service with increasing clients, load balancers are used to manage multiple replicas of the service to improve resource utilization and throughput. In the real world, there are various use cases of such constructs in distributed caching systems, distributed database management systems, network traffic systems, etc. To efficiently distribute the requests coming from the clients, a load balancer uses a consistent hashing data structure.The load balancer is exposed to the clients through the APIs shown in the diagram (details on the APIs are given further). There should always be N servers present to handle the requests. In the event of failure, new replicas of the server will be spawned by the load balancer to handle the requests.
@@ -270,7 +283,7 @@ Server Respawning Can be seen here :
 
 For Running the LoadBalancer, in the root dorectory, run command : 
 ```
-make start
+make run
 ```
 
 RUNNING : 
