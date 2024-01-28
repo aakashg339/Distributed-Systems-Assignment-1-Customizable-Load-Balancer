@@ -20,6 +20,8 @@
 
 A load balancer routes the requests coming from several clients asynchronously among several servers so that the load is nearly evenly distributed among them. In order to scale a particular service with increasing clients, load balancers are used to manage multiple replicas of the service to improve resource utilization and throughput. In the real world, there are various use cases of such constructs in distributed caching systems, distributed database management systems, network traffic systems, etc. To efficiently distribute the requests coming from the clients, a load balancer uses a consistent hashing data structure.The load balancer is exposed to the clients through the APIs shown in the diagram (details on the APIs are given further). There should always be N servers present to handle the requests. In the event of failure, new replicas of the server will be spawned by the load balancer to handle the requests.
 
+[Back to Contents](#contents)
+
 # How to run
 From the root folder 
 
@@ -31,6 +33,7 @@ make run
 make run_compose
 
 ```
+[Back to Contents](#contents)
 
 # SERVER
 A simple web server that accepts HTTP requests on port 5000 in the below endpoints.
@@ -56,6 +59,7 @@ A simple web server that accepts HTTP requests on port 5000 in the below endpoin
 
 To containerize the server as an image and make it deployable, a Dockerfile is provided.
 
+[Back to Contents](#contents)
 
 # Consistent Hash Map 
 
@@ -81,6 +85,8 @@ To containerize the server as an image and make it deployable, a Dockerfile is p
 ### Handling Conflicts
 
 In case of conflicts between server instances, Quadratic probing is used to locate the next suitable slot in the hash map.
+
+[Back to Contents](#contents)
 
 # Load Balancer Container
 
@@ -170,6 +176,7 @@ This Folder includes a Dockerfile to containerize the load balancer. Additionall
 - **Total number of slots in the consistent hash map (#slots):** 512
 - **Number of virtual servers for each server container (K):** log(512) = 9
 
+[Back to Contents](#contents)
 
 # Analysis
 
@@ -264,3 +271,4 @@ Server Respawning Can be seen here :
       <img src="images/spawn.png" width="90%"/><br><strong>Spawning</strong>
 </p>
 
+[Back to Contents](#contents)
