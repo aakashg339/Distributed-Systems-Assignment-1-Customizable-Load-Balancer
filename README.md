@@ -234,8 +234,21 @@ This Folder includes a Dockerfile to containerize the load balancer. Additionall
 </p>
 
 
-## Explanation : 
+## Observations
 
+
+1. **Load Imbalance:** The distribution of requests is uneven, with some servers handling significantly more traffic than others. Server 6 is underutilized.
+
+2. **Consistent Hashing Impact:** The load imbalance is attributed to the consistent hashing algorithm, which aims to minimize reassignments during server changes but doesn't guarantee a balanced load.
+
+3. **Scalability Concerns:** The uneven distribution raises concerns about scalability. As the load or the number of servers increases, the imbalance may become more pronounced.
+
+
+## Views 
+
+1. **Horizontal Scaling:** The load balancer can be scaled horizontally to handle increased traffic by distributing it across multiple instances.
+
+2. **Vertical Scaling:**  The number of slots in the load balancer can be increased to accommodate more servers. This can help handle increased traffic or accommodate additional servers without necessarily changing the overall architecture of the system. (There may come a point where further increase in the capacity of the load balancer becomes impractical or cost-ineffective)
 
 
 ## Verifying different Endpoints : 
