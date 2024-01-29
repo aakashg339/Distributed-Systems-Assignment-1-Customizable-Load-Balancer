@@ -237,7 +237,7 @@ This Folder includes a Dockerfile to containerize the load balancer. Additionall
 ## Observations
 
 
-1. **Load Imbalance:** The distribution of requests is uneven, with some servers handling significantly more traffic than others. Server 6 is underutilized.
+1. **Load Imbalance:** The distribution of requests is uneven, with some servers handling significantly more traffic than others. Server 6 is underutilized (With respect to the original Hash function).
 
 2. **Consistent Hashing Impact:** The load imbalance is attributed to the consistent hashing algorithm, which aims to minimize reassignments during server changes but doesn't guarantee a balanced load.
 
